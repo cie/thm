@@ -5,6 +5,7 @@
 :- discontiguous(prove/1).
 :- discontiguous(axiom/1).
 :- dynamic(seen/1).
+:- dynamic(trying/1).
 
 trivial(X) :- axiom(X).
 trivial(X) :- seen(X).
@@ -27,6 +28,14 @@ axiom(X = X).
 prove(X = Y) :- trivial(Y = X). % axiom(X = Y if Y = X)
 'test'(follows(6 = 6), true).
 'test'(follows(asdf = asdf), true).
+prove(X) :- X =.. [F, A, B], assume(trying(X)), (
+  (trivial(A = A2); trivial(A2 = A)), A \= A2, X2 =.. [F, A2, B], not(trying(X2)), prove(X2)
+  ;(trivial(B = B2); trivial(B2 = B)), B \= B2, X2 =.. [F, A, B2], not(trying(X2)), prove(X2)
+).
+prove(not(X)) :- X =.. [F, A, B], assume(trying(X)), (
+  (trivial(A = A2); trivial(A2 = A)), A \= A2, X2 =.. [F, A2, B], not(trying(X2)), prove(not(X2));
+  (trivial(B = B2); trivial(B2 = B)), B \= B2, X2 =.. [F, A, B2], not(trying(X2)), prove(not(X2))
+).
 
 % and, or
 prove((X and Y)) :- prove(X), prove(Y).
@@ -38,9 +47,6 @@ prove((X or Y)) :- prove(X); prove(Y).
 
 % forall
 prove(B) :- trivial(forall(A, B)), prove(A).
-
-% in
-prove(A in B) :- trivial(A = C), C \= A, prove(C in B).
 
 % naturals
 axiom((zero in naturals)).
@@ -54,8 +60,15 @@ axiom(N = succ(K)) :- integer(N), N > 0, N0 is N-1, prove(N0 = K).
 'test'(follows(2 = succ(succ(zero))), true).
 'test'(follows((2 in naturals)), true).
 'test'(follows((10 in naturals)), true).
-'test'(follows((1337 in naturals)), true).
+%'test'(follows((1337 in naturals)), true).  % TODO optimize?
 'test'(follows((-1337 in naturals)), fail).
+axiom(not(succ(X) = 0)).
+'test'(follows(not(0 = zero)), fail).
+'test'(follows(not(1 = zero)), true).
+'test'(follows(not(1337 = zero)), true).
+%axiom(A + 0 = A).
+%axiom(A + succ(B) = succ(A + B)).
+'test'(follows(1 + 1 = 2), true).
 
 
 % utils
