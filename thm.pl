@@ -9,19 +9,18 @@
 
 prove(X) :- axiom(X).
 
-follows(X) :- write(X), write(' '), seen(X), write(seen), nl, !; prove(X), write(proven), nl, asserta(seen(X)), !; write(failed), nl, fail.
+follows(X) :- write(X), write(' '), seen(X), write(seen), nl, !; prove(X), write(proven), nl, !, assume(seen(X)); write(failed), nl, fail.
 
 % true, false, not
 axiom(true).
-prove(X) :- def(X, true).
-axiom(not(false) = true).
-axiom(not(true) = false).
+axiom(not(false)).
 'test'(follows(true), true).
 'test'(follows(false), fail).
-'test'((follows(true = not(false)), follows(not(false))), true).
+'test'((follows(not(false))), true).
 
 % =
 axiom(X = X).
+prove(X = Y) :- axiom(Y = X).
 'test'(follows(6 = 6), true).
 'test'(follows(asdf = asdf), true).
 
@@ -36,17 +35,21 @@ prove((X or Y)) :- prove(X); prove(Y).
 % forall
 prove(B) :- axiom(forall(A, B)), prove(A).
 
+% in
+prove(A in B) :- seen(A = C), prove(C in B).
+
 % naturals
 axiom((zero in naturals)).
 axiom(forall(X in naturals, succ(X) in naturals)).
 'test'(follows((zero in naturals)), true).
 'test'(follows((succ(succ(zero)) in naturals)), true).
-def(0, zero).
-def(N, succ(K)) :- integer(N), N > 0, N0 is N-1, def(N0, K).
-'test'(def(0, zero), true).
-'test'(def(2, succ(succ(zero))), true).
-'test'(follows((1 = succ(zero))), true).
-'test'(follows((2 in naturals)), true).
+axiom(0 = zero).
+axiom(N = succ(K)) :- integer(N), N > 0, N0 is N-1, prove(N0 = K).
+'test'(follows(0 = zero), true).
+'test'(follows(1 = succ(zero)), true).
+'test'(follows(2 = succ(succ(zero))), true).
+'test'(follows((2 in naturals)), fail).
+'test'((follows(2 = succ(succ(zero))), follows((2 in naturals))), true).
 
 
 % utils
