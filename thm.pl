@@ -2,6 +2,8 @@
 :- op(1000, xfy, and).
 :- op(1100, xfy, or).
 :- op(700, xfy, in).
+:- discontiguous(test/2).
+:- dynamic(proven/1).
 
 def(x, true).
 def(y, false).
@@ -31,6 +33,12 @@ if(A, Then, Else) :- A, !, Then; Else.
 not(A):- if(A, fail, true).
 forall(A, B) :- not((A, not(B))).
 result(A, B):- if(A, B=true, B=fail).
+assume(A, B) :- if(A, B, (asserta(A), if(B, (retractall(A), true), (retractall(A), fail)))).
+test((proven(asdf)), fail).
+test(assume(proven(asdf), proven(asdf)), true).
+test(assume(proven(asdf), proven(ghjk)), fail).
+test((proven(asdf)), fail).
+
 main:-
   forall(test(Thm, Res),
     (if(result(Thm, Res), Ok=ok, Ok='NOK'), print(Ok), print(' '), print(Thm), nl)
