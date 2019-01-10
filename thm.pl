@@ -3,10 +3,10 @@
 :- op(1100, xfy, or).
 :- op(700, xfy, in).
 :- discontiguous(test/2).
+:- discontiguous(def/2).
+:- discontiguous(proven/1).
 :- dynamic(proven/1).
 
-def(x, true).
-def(y, false).
 axiom(true).
 axiom(not(false)).
 axiom((1 in integers)).
@@ -14,16 +14,18 @@ axiom((1 in integers)).
 proven(X = Y) :- def(X, Y).
 proven(X = Y) :- def(Y, X).
 
+def(x, true).
+def(y, false).
 proven(X) :- axiom(X).
 proven(X) :- def(X, D), proven(D).
-proven((X and Y)) :- proven(X), proven(Y).
-proven((X or Y)) :- proven(X); proven(Y).
-
 test(proven(true), true).
 test(proven(x), true).
 test(proven(false), fail).
 test(proven(y), fail).
 test((Y = false, proven(not(Y))), true).
+
+proven((X and Y)) :- proven(X), proven(Y).
+proven((X or Y)) :- proven(X); proven(Y).
 test(proven((x or y)), true).
 test(proven((x and y)), fail).
 test(proven((x and x)), true).
