@@ -5,11 +5,11 @@
 :- discontiguous(test/2).
 :- discontiguous(def/2).
 :- discontiguous(proven/1).
+:- discontiguous(axiom/1).
 :- dynamic(proven/1).
 
 axiom(true).
 axiom(not(false)).
-axiom((1 in integers)).
 
 proven(X = Y) :- def(X, Y).
 proven(X = Y) :- def(Y, X).
@@ -29,7 +29,21 @@ proven((X or Y)) :- proven(X); proven(Y).
 test(proven((x or y)), true).
 test(proven((x and y)), fail).
 test(proven((x and x)), true).
-test(proven((1 in integers)), true).
+test(proven((x and x and true)), true).
+
+proven(B) :- axiom(forall(A, B)), proven(A).
+
+% naturals
+axiom((zero in naturals)).
+axiom(forall(X in naturals, succ(X) in naturals)).
+test(proven((zero in naturals)), true).
+test(proven((succ(succ(zero)) in naturals)), true).
+def(0, zero).
+def(N, succ(K)) :- integer(N), N > 0, N0 is N-1, def(N0, K).
+test(def(0, zero), true).
+test(def(1, succ(zero)), true).
+test(def(2, succ(succ(zero))), true).
+
 
 if(A, Then, Else) :- A, !, Then; Else.
 not(A):- if(A, fail, true).
