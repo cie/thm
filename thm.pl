@@ -2,14 +2,18 @@
 :- op(1000, xfy, and).
 :- op(700, xfy, in).
 :- discontiguous(test/2).
-:- discontiguous(def/2).
 :- discontiguous(prove/1).
 :- discontiguous(axiom/1).
 :- dynamic(seen/1).
 
-prove(X) :- axiom(X).
+trivial(X) :- axiom(X).
+trivial(X) :- seen(X).
 
-follows(X) :- write(X), write(' '), seen(X), write(seen), nl, !; prove(X), write(proven), nl, !, assume(seen(X)); write(failed), nl, fail.
+prove(X) :- trivial(X).
+
+follows(X) :- seen(X), !; prove(X), !, assume(seen(X))
+%; write(X), write(' failed'), nl, fail
+.   
 
 % true, false, not
 axiom(true).
@@ -20,7 +24,7 @@ axiom(not(false)).
 
 % =
 axiom(X = X).
-prove(X = Y) :- axiom(Y = X).
+prove(X = Y) :- trivial(Y = X). % axiom(X = Y if Y = X)
 'test'(follows(6 = 6), true).
 'test'(follows(asdf = asdf), true).
 
@@ -33,10 +37,10 @@ prove((X or Y)) :- prove(X); prove(Y).
 'test'(follows((true and true and true)), true).
 
 % forall
-prove(B) :- axiom(forall(A, B)), prove(A).
+prove(B) :- trivial(forall(A, B)), prove(A).
 
 % in
-prove(A in B) :- seen(A = C), prove(C in B).
+prove(A in B) :- trivial(A = C), C \= A, prove(C in B).
 
 % naturals
 axiom((zero in naturals)).
@@ -48,8 +52,10 @@ axiom(N = succ(K)) :- integer(N), N > 0, N0 is N-1, prove(N0 = K).
 'test'(follows(0 = zero), true).
 'test'(follows(1 = succ(zero)), true).
 'test'(follows(2 = succ(succ(zero))), true).
-'test'(follows((2 in naturals)), fail).
-'test'((follows(2 = succ(succ(zero))), follows((2 in naturals))), true).
+'test'(follows((2 in naturals)), true).
+'test'(follows((10 in naturals)), true).
+'test'(follows((1337 in naturals)), true).
+'test'(follows((-1337 in naturals)), fail).
 
 
 % utils
