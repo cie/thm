@@ -3,46 +3,54 @@
 :- op(1000, xfy, and).
 :- op(700, xfy, in).
 :- op(900, fy, not).
-:- discontiguous(prove/1).
 :- discontiguous(axiom/1).
 :- dynamic(seen/1).
 :- dynamic(trying/1).
 :- dynamic(using/1).
+:- use_module(library(occurs)).
 
 % utils
 if(A, Then, Else) :- A, !, Then; Else.
 assume(A) :- if(A, true, (asserta(A); retractall(A), fail)).
+substitute(A, A, B, B).
+substitute(X, A, B, X2) :-
+  X =.. [F | Args],
+  substitute_member(Args, U, V, Args2), 
+  substitute(U, A, B, V),
+  X2 =.. [F | Args2].
+substitute_member([A | T], A, B, [B | T]).
+substitute_member([H | T], A, B, [H | T2]) :- substitute_member(T, A, B, T2).
 
+% proof
 trivial(X) :- axiom(X).
 trivial(X) :- seen(X).
-
-%prove(_) :- statistics(global_shifts, N), write(N), (N > 10 -> !, fail).
-%prove(X) :- write(X), fail.
-prove(X) :- axiom(X).
-
-follows(X) :- seen(X), !; prove(X), !, assume(seen(X))
-%; write(X), write(' failed'), nl, fail
+follows(X) :- seen(X), !; prove(X, 2), !, assume(seen(X))
+; write(X), write(' failed'), nl, fail
 .   
 
 % =
 axiom(X = X).
-prove(X = Y) :- trivial(Y = X). % axiom(X = Y if Y = X)
-% substitute sub-expressions by =
-prove(X) :- substitute_trivials(X, X2), \+ trying(X2), assume(trying(X)), prove(X2).
-substitute_trivials(X, X2) :- X =.. [_, _, _], substitute_arg(X, X2).
-substitute_trivials(not(X), not(X2)) :- X =.. [_, _, _], substitute_arg(X, X2).
-substitute_arg(X, X2) :- X =.. [F | Args], substitute_member(Args, Args2), X2 =.. [F | Args2].
-substitute_member([H | T], [H2 | T]) :- trivially_equal(H, H2), H \= H2.
-substitute_member([H | T], [H | T2]) :- substitute_member(T, T2).
-%trivially_equal(A, B) :- write(A=B), fail.
-trivially_equal(A, B) :- trivial(A = B).%, \+ using(A = B), assume(using(A = B)).
-trivially_equal(B, A) :- trivial(A = B).%, \+ using(A = B), assume(using(A = B)).
+
+%prove(X, _) :- write(X), fail.
+
+% axiom
+prove(X, _) :- axiom(X), write(axiom(X)).
+prove(X = Y, _) :- trivial(Y = X). % axiom(X = Y <=> Y = X)
+
+% =
+%prove(X, D) :- substitute_trivials(X, X2), \+ trying(X2), assume(trying(X)), D2 is D-1, D2>0, write(X2), nl, prove(X2, D2).
+prove(X, D) :- (trivial(A = B); trivial(B = A)), A \== B, substitute(X, A, B, X2), write(X2), nl,
+ \+ trying(X2), assume(trying(X)),
+ D2 is D-1,
+ D2>0,
+ prove(X2, D2).
+
 
 % and, or
-prove((X and Y)) :- prove(X), prove(Y).
-prove((X or Y)) :- prove(X); prove(Y).
+prove((X and Y), D) :- prove(X, D), prove(Y, D).
+prove((X or Y), D) :- prove(X, D); prove(Y, D).
 
 % =>
-prove(B) :- trivial(A => B), prove(A).
+prove(B, D) :- trivial(A => B), prove(A, D).
 %prove(A => B) :- prove(not(B and not(A)))prove(A). % TODO
 
