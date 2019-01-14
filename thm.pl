@@ -38,12 +38,7 @@ prove(X, _) :- axiom(X).
 prove(X = Y, _) :- trivial(Y = X). % axiom(X = Y <=> Y = X)
 
 % =
-prove(X, _) :- trivial(Y), (trivial(A = B); trivial(B = A)), A \== B, substitute(X, A, B, Y).%, %write(X2), nl,
- %\+ trying(X2), assume(trying(X)),
- %D2 is D-1,
- %D2>0,
- %prove(X2, D2).
-
+prove(X, _) :- trivial(Y), (trivial(A = B); trivial(B = A)), A \== B, substitute(X, A, B, Y).
 
 % and, or
 prove((X and Y), D) :- prove(X, D), prove(Y, D).
