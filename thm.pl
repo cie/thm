@@ -34,16 +34,15 @@ axiom(X = X).
 %prove(X, _) :- write(X), fail.
 
 % axiom
-prove(X, _) :- axiom(X), write(axiom(X)).
+prove(X, _) :- axiom(X).
 prove(X = Y, _) :- trivial(Y = X). % axiom(X = Y <=> Y = X)
 
 % =
-%prove(X, D) :- substitute_trivials(X, X2), \+ trying(X2), assume(trying(X)), D2 is D-1, D2>0, write(X2), nl, prove(X2, D2).
-prove(X, D) :- (trivial(A = B); trivial(B = A)), A \== B, substitute(X, A, B, X2), write(X2), nl,
- \+ trying(X2), assume(trying(X)),
- D2 is D-1,
- D2>0,
- prove(X2, D2).
+prove(X, _) :- trivial(Y), (trivial(A = B); trivial(B = A)), A \== B, substitute(X, A, B, Y).%, %write(X2), nl,
+ %\+ trying(X2), assume(trying(X)),
+ %D2 is D-1,
+ %D2>0,
+ %prove(X2, D2).
 
 
 % and, or
